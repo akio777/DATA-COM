@@ -6,6 +6,7 @@ import numpy as np
 import serial
 import keyboard
 import time
+import os
 
 WHITE = [255, 255, 255]
 BLACK = [0, 0, 0]
@@ -50,9 +51,10 @@ def BWgo2Array(bw_data):
     tempARRAY = np.array(bw_data, dtype=np.uint8)
     return Image.fromarray(tempARRAY)
 
-def readBMP():
+def readBMP(inputIMG):
     # ! ---- READ  BLUR  B&W backtoPIC CROP DONE ---- ! #
-    readIM = Image.open('C:\out\Pic.bmp', 'r')
+    # time.sleep(0.1)
+    readIM = inputIMG
     # img_array.save('raw_pic\\'+'BEFORE'+'.bmp')
     imFT = readIM.filter(ImageFilter.GaussianBlur(radius = 2))
     imBW = goBW(imFT)
@@ -60,9 +62,9 @@ def readBMP():
     # newSIZE = imNEW.size
     newSIZE = (NxN, NxN)
     imCROP = imNEW.crop((LEFT, TOP, RIGHT, BOTTOM))
-    imCROP.save('raw_pic\\'+'CROP'+'.bmp')
+    # imCROP.save('raw_pic\\'+'CROP'+'.bmp')
     imDONE = imCROP.resize(newSIZE)
-    imDONE.save('raw_pic\\'+'DATACOM'+'.bmp')
+    # imDONE.save('raw_pic\\'+'DATACOM'+'.bmp')
     # imDONE.show()
     # imDONE.save('ImageProcess/raw_pic/'+'DATACOM'+'.bmp')
     # imDONE.show()
@@ -72,8 +74,8 @@ def readBMP():
 def whichPIC(arrayBW):
     output=''
     A_TOP =       [1,1,1,1,0,0,0,0]
-    A_RIGHT =     [1,0,1,0,1,0,1,0]
-    A_LEFT =      [0,1,0,1,0,1,0,1]
+    A_LEFT =     [1,0,1,0,1,0,1,0]
+    A_RIGHT =      [0,1,0,1,0,1,0,1]
     A_UPPER =     [1,1,0,1,0,1,0,0]
     A_BOTTOM =    [0,0,0,0,1,1,1,1]
     A_LOWER =     [0,0,1,0,1,0,1,1]
@@ -160,35 +162,50 @@ def readCAMERA(serial_connected):
     return imDONE
     # print('\******************\n',UNO,' Closed\n******************')
 
-
-# !!! --------------------------------------------------------------------------  MAIN  -------------------------------------------------------------------------!!!
-
-round = 0
-while(True):
-    temp = 'Unknown'
-    count = 0
-    # serialPort = serial_connecting()
-    while temp is 'Unknown':
-        readImage = readBMP()
-        go2BW = w1b0(array2Dto1D(img2array(readImage)))
-        # print(go2BW)
-        temp = whichPIC(go2BW)
-        if temp is not 'Unknown':
-            print('Processed : ',temp,'  ',end='')
+def javaCapture():
+    img = None
+    while(True):
+        try:
+            img = Image.open("C:\\out\\Pic.bmp",'r')
             break
-        else:
-            print(temp)
-        if count == 7:
-            count = 0
-        # print(temp)
-        count+=1
-    print('# ---- ROUND : ',round,' ---- #')
-    round += 1
-    # time.sleep(1)
+        except:
+            print('wait')
+            time.sleep(0.1)
+    return img
 
+
+
+# !!! --------------------------------------------------------------------------  Image Processing Function    -------------------------------------------------------------------------!!!
+def ImageProcessing():
+    Success = 0
+    readImage = None
+    while(Success < 5):
+        temp = 'Unknown'
+        # serialPort = serial_connecting()
+        while temp is 'Unknown':
+            print(' Still processing... ')
+            readImage = readBMP(javaCapture())
+            go2BW = w1b0(array2Dto1D(img2array(readImage)))
+            # print(go2BW)
+            temp = whichPIC(go2BW)
+            if temp is not 'Unknown':
+                break
+            else:
+                print(' N/A processing... ')
+                if Success != 0:
+                    print(temp,'  current Successed count : ',Success)
+                Success = 0
+            time.sleep(0.1)
+        # time.sleep(0.1)
+        Success += 1
+    time.sleep(1)
+    print('Success Processed , This picture is >>>',temp)
+    return temp
 #!!! --------------------------------------------------------------------------  XXX  -------------------------------------------------------------------------!!!
-
-
+os.remove("C:\\out\\Pic.bmp")
+time.sleep(0.5)
+while(True):
+    ImageProcessing()
 
 
 
