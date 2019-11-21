@@ -52,7 +52,7 @@ def BWgo2Array(bw_data):
 
 def readBMP():
     # ! ---- READ  BLUR  B&W backtoPIC CROP DONE ---- ! #
-    readIM = Image.open('C:/out/Pic.bmp', 'r')
+    readIM = Image.open('C:\out\Pic.bmp', 'r')
     # img_array.save('raw_pic\\'+'BEFORE'+'.bmp')
     imFT = readIM.filter(ImageFilter.GaussianBlur(radius = 2))
     imBW = goBW(imFT)
@@ -171,14 +171,16 @@ while(True):
     while temp is 'Unknown':
         readImage = readBMP()
         go2BW = w1b0(array2Dto1D(img2array(readImage)))
+        # print(go2BW)
         temp = whichPIC(go2BW)
         if temp is not 'Unknown':
+            print('Processed : ',temp,'  ',end='')
             break
-        if count == 7:
-            print('- - -TIME OUT CANT PROCESS - - -')
-            count = 0
         else:
             print(temp)
+        if count == 7:
+            count = 0
+        # print(temp)
         count+=1
     print('# ---- ROUND : ',round,' ---- #')
     round += 1
