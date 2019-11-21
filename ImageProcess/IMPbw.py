@@ -50,18 +50,19 @@ def BWgo2Array(bw_data):
     tempARRAY = np.array(bw_data, dtype=np.uint8)
     return Image.fromarray(tempARRAY)
 
-def readBMP(img_array):
+def readBMP():
     # ! ---- READ  BLUR  B&W backtoPIC CROP DONE ---- ! #
-    # readIM = Image.open('ImageProcess/raw_pic/60.bmp', 'r')
-    img_array.save('ImageProcess/raw_pic/'+'BEFORE'+'.bmp')
-    imFT = img_array.filter(ImageFilter.GaussianBlur(radius = 2))
+    readIM = Image.open('C:/out/Pic.bmp', 'r')
+    # img_array.save('raw_pic\\'+'BEFORE'+'.bmp')
+    imFT = readIM.filter(ImageFilter.GaussianBlur(radius = 2))
     imBW = goBW(imFT)
     imNEW = BWgo2Array(imBW)
     # newSIZE = imNEW.size
     newSIZE = (NxN, NxN)
     imCROP = imNEW.crop((LEFT, TOP, RIGHT, BOTTOM))
+    imCROP.save('raw_pic\\'+'CROP'+'.bmp')
     imDONE = imCROP.resize(newSIZE)
-    imCROP.save('ImageProcess/raw_pic/'+'DATACOM'+'.bmp')
+    imDONE.save('raw_pic\\'+'DATACOM'+'.bmp')
     # imDONE.show()
     # imDONE.save('ImageProcess/raw_pic/'+'DATACOM'+'.bmp')
     # imDONE.show()
@@ -101,10 +102,7 @@ def pause():
     while(1):pass
 
 def serial_connecting():
-    UNO = 'COM19'
-    B2M = 1000000
-    PRE = 2
-    BAUD = B2M / PRE
+    UNO = 'COM1'
     serialPort = serial.Serial()
     serialPort.port = UNO
     serialPort.baudrate = 1000000
@@ -169,19 +167,15 @@ round = 0
 while(True):
     temp = 'Unknown'
     count = 0
-    serialPort = serial_connecting()
+    # serialPort = serial_connecting()
     while temp is 'Unknown':
-        image = readCAMERA(serialPort)
-        readImage = readBMP(image)
+        readImage = readBMP()
         go2BW = w1b0(array2Dto1D(img2array(readImage)))
         temp = whichPIC(go2BW)
         if temp is not 'Unknown':
-            # detect.save('ImageProcess\\raw_pic\\'+'DATACOM'+'.bmp')
-            serialPort.close()
-        if count == 10:
-            serialPort.close()
+            break
+        if count == 7:
             print('- - -TIME OUT CANT PROCESS - - -')
-            serialPort.open()
             count = 0
         else:
             print(temp)
