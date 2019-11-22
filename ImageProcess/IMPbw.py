@@ -184,6 +184,7 @@ def javaCapture():
 def ImageProcessing():
     Success = 0
     readImage = None
+    c_unknown = 0
     while(Success < 10):
         temp = 'Unknown'
         # serialPort = serial_connecting()
@@ -196,10 +197,10 @@ def ImageProcessing():
             if temp is not 'Unknown':
                 break
             else:
-                # print(' N/A processing... ')
-                # if Success != 0:
-                    # print(temp,'  current Successed before Failed : ',Success)
+                c_unknown +=1
                 Success = 0
+            if c_unknown > 100:
+                break
             time.sleep(0.1)
         # time.sleep(0.1)
         Success += 1
@@ -216,7 +217,9 @@ def ProcessIMG_out(): # ! <<<< ------ RUN and return what is image :)
         if output != 'Unknown':
             Success_rate += 1
         else:
-            Success_rate -= 1
+            break
+    #     print('-'*Success_rate,end='')
+    # print('processed')
     return output
 
 
@@ -226,6 +229,30 @@ def serial_connecting(): #! <<< ------ Serial Port Setting
 
 def gotoBYTE(cha):
     return cha.encode()
+
+def imageTo3bit(image):
+    if image == 'TOP':
+        return '001'
+    elif image == 'BOTTOM':
+        return '010'
+    elif image == 'LEFT':
+        return '011'
+    elif image == 'RIGHT':
+        return '100'
+    elif image == 'UPPER':
+        return '101'
+    elif image == 'LOWER':
+        return '110'
+    elif image == 'Unknown':
+        return '111'
+
+def waitACK(ack):
+    temp = ''
+    while temp != ack:
+        if Ser.inWaiting():
+            temp = Ser.read()
+            print(temp)
+        # print('wait')
 
 #! VOID setup -------------------------------
 # os.remove("C:\\out\\Pic.bmp")
@@ -240,36 +267,79 @@ c_mode = 0
 python_input = None
 
 storage = []
-
+allpic = None
 #! VOID LOOP ------------------------------
 while(1):
     # while not keyboard.i_pressed('q'):
     if Ser.inWaiting():
         arduino = Ser.read()
         if arduino == b'R':
-            print('arduino ready!!!')
+            print('- - - PC1 Order PC2 take all pictures - - -')
 
-            Ser.write(b'r')
+            Ser.write(b'r') #! <--- -45 angle
             current_img = ProcessIMG_out()
+            current_img = imageTo3bit(current_img) + '01'
             storage.append(current_img)
-            print(storage)
-            time.sleep(1)
+            # print(storage)
+            # time.sleep(1)
 
-            Ser.write(b'm')
+            Ser.write(b'm') #! <--- 0 angle
             current_img = ProcessIMG_out()
+            current_img = imageTo3bit(current_img) + '00'
             storage.append(current_img)
-            print(storage)
-            time.sleep(1)
+            # print(storage)
+            # time.sleep(1)
 
-            Ser.write(b'l')
+            Ser.write(b'l') #! <--- 45 angle
             current_img = ProcessIMG_out()
+            current_img = imageTo3bit(current_img) + '10'
             storage.append(current_img)
+            # print(storage)
+            # time.sleep(1)
             print(storage)
-            time.sleep(1)
+            arduino = '' ###### !  <-----------------  RESET arduino when END step ------------------------
+
+            print('tell arduino for send all img')
+            while arduino != b'n': #! @ <--- n = next step
+                if Ser.inWaiting():
+                    arduino = Ser.read()
+                Ser.write(b'4') #! <---- tell arduino , python will send data back
+            arduino= ''
+
+            print('send all img')
+            
+            if Ser.inWaiting():
+                arduino = Ser.read()
+            print('send 1')
+            Ser.write(b'1')
+            data = int(storage[0], 2)
+            Ser.write(data)
+            waitACK(b'2')
+            print('asdasd')
+
+            print('send 2')
+            Ser.write(b'2')
+            data = int(storage[1], 2)
+            Ser.write(data)
+            waitACK(b'3')
+
+            print('send 3')
+            Ser.write(b'3')
+            data1 = int(storage[2], 2)
+            Ser.write(data)
+            waitACK(b'q')
+            arduino = ''
+            
+            while Ser.in_waiting != 3:
+                pass
+            print(Ser.read_all())
+            print('---------------------------------')
 
             pause()
+            
                 
-                
+
+
     # current_img = ProcessIMG_out()
     # print(current_img)
     
