@@ -1,40 +1,53 @@
 #include <Servo.h>
-Servo upper,under; // <<< define servo value
-char inputdata;
+Servo upper,under; //ประกาศตัวแปรแทน Servo กำหนดข
+char tmp;
 //left
-//mid 84 87
+//mid 81 83
 //right 82 42
-int angle = 81,base = 83;
+int up = 81,down = 83;
 
-int right = 40;
-int mid = 85;
-int left = 130;
+char python;
 
-int current = right;
-
-void setup() {
-  // put your setup code here, to run once:
+void setup()
+{
   Serial.begin(115200);
-  under.attach(9);// กำหนดขา 9 ควบคุม Servo
-  upper.attach(10);
-  under.write(40);
-  upper.write(84);
+  under.attach(D7);// กำหนดขา 9 ควบคุม Servo
+  upper.attach(D8);
+  upper.write(up);
+  under.write(down);
+  Serial.flush();
+//  Serial.print('R');
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-//  goLEFT(current);
-//  Serial.println(current);
-//  goLEFT(current);
-//  Serial.println(current);
-}
-
-void goLEFT(int in){
-  int temp = 0;
-  for(int i=in;i<=in+45;i++){
-    under.write(i);
-    delay(75);
-    temp = i;
+void loop(){
+  delay(1000);
+  Serial.print('R');
+  if(Serial.available() > 0){
+    python = Serial.read();
+    if(python == 'm'){
+      upper.write(81);
+      under.write(83);
+      
+    }
+    else if(python == 'l'){
+      upper.write(81);
+      under.write(134);
+      
+    }
+    else if(python == 'r'){
+      upper.write(81);
+      under.write(41);
+      
+    }
+    else{
+      delay(100);
+    }
   }
-  current = temp;
+
+}
+
+void Pause(){
+  while(1){
+    
+  }
 }
