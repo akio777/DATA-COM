@@ -1,0 +1,213 @@
+[Version]
+Signature="$CHICAGO$"
+Class=USB
+ClassGuid = {79046022-7904-7904-1980-198007056022}
+provider=%ODM%
+LayoutFile=layout.inf
+CatalogFile=Hantek6022BL.cat
+
+[ClassInstall32]
+Addreg = DSOReg
+
+[ClassInstall]
+Addreg = DSOReg
+
+[ClassInstall32.ntamd64]
+Addreg = DSOReg
+
+[ClassInstall32.ntia64]
+Addreg = DSOReg
+
+[DSOReg]
+HKR, , , 0, %ClassName%
+HKR, , Icon, , -5
+HKR, , NoInstallClass, , 1
+
+[Manufacturer]
+%ODM%=ODM
+%ODM%=ODM,NTia64
+%ODM%=ODM,NTamd64
+
+
+[ODM]
+%USB\VID_04B4&PID_602A.DeviceDesc%=Hantek6022BL1.Dev, USB\VID_04B4&PID_602A
+%USB\VID_04B5&PID_602A.DeviceDesc%=Hantek6022BL2.Dev, USB\VID_04B5&PID_602A
+
+[ODM.NTamd64]
+%USB\VID_04B5&PID_602A.DeviceDesc% = Hantek6022BL2.Dev.NTamd64, USB\VID_04B5&PID_602A
+%USB\VID_04B4&PID_602A.DeviceDesc% = Hantek6022BL1.Dev.NTamd64, USB\VID_04B4&PID_602A
+
+
+[ODM.NTia64]
+%USB\VID_04B4&PID_602A.DeviceDesc% = Hantek6022BL1.Dev.NTia64, USB\VID_04B4&PID_602A
+%USB\VID_04B5&PID_602A.DeviceDesc% = Hantek6022BL2.Dev.NTia64, USB\VID_04B5&PID_602A
+
+[PreCopySection]
+HKR,,NoSetupUI,,1
+
+[DestinationDirs]
+Hantek6022BL2.Files.Ext = 10,System32\Drivers
+;Hantek6022BL2.Files.Inf = 10,INF
+Hantek6022BL1.Files.Ext = 10,System32\Drivers
+;Hantek6022BL1.Files.Inf = 10,INF
+Hantek6022BL2.Files.Ext.amd64 = 10,System32\Drivers
+Hantek6022BL1.Files.Ext.amd64 = 10,System32\Drivers
+Hantek6022BL2.Files.Ext.ia64 = 10,System32\Drivers
+Hantek6022BL1.Files.Ext.ia64 = 10,System32\Drivers
+
+[Hantek6022BL2.Dev]
+CopyFiles=Hantek6022BL2.Files.Ext;, Hantek6022BL2.Files.Inf
+AddReg=Hantek6022BL2.AddReg
+
+[Hantek6022BL2.Dev.NT]
+CopyFiles=Hantek6022BL2.Files.Ext;, Hantek6022BL2.Files.Inf
+AddReg=Hantek6022BL2.AddReg
+
+[Hantek6022BL2.Dev.NTamd64]
+CopyFiles = Hantek6022BL2.Files.Ext.amd64, Hantek6022BL2.Files.Inf
+AddReg    = Hantek6022BL2.amd64.AddReg
+
+[Hantek6022BL2.Dev.NTia64]
+CopyFiles = Hantek6022BL2.Files.Ext.I64, Hantek6022BL2.Files.Inf
+AddReg    = Hantek6022BL2.ia64.AddReg
+
+[Hantek6022BL2.Dev.NT.Services]
+Addservice = Hantek6022BL2, 0x00000002, Hantek6022BL2.AddService
+
+[Hantek6022BL2.Dev.NTamd64.Services]
+AddService = Hantek6022BL2, 2, Hantek6022BL2.AddServiceAmd64
+
+[Hantek6022BL2.Dev.NTia64.Services]
+AddService = Hantek6022BL2, 2, Hantek6022BL2.AddServiceIA64
+
+[Hantek6022BL2.AddService]
+DisplayName    = %Hantek6022BL2.SvcDesc%
+ServiceType    = 1                  
+StartType      = 2                  
+ErrorControl   = 1                  
+ServiceBinary  = %10%\System32\Drivers\Hantek6022BLX862.SYS
+LoadOrderGroup = Base
+
+[Hantek6022BL2.AddServiceAmd64]
+DisplayName   = %Hantek6022BL2.SvcDesc%
+ServiceType   = 1
+StartType     = 2
+ErrorControl  = 1
+ServiceBinary = %10%\System32\Drivers\Hantek6022BLAMD642.SYS
+
+[Hantek6022BL2.AddServiceIA64]
+DisplayName   = %Hantek6022BL2.SvcDesc%
+ServiceType   = 1
+StartType     = 2
+ErrorControl  = 1
+ServiceBinary = %10%\System32\Drivers\Hantek6022BLIA642.SYS
+
+[Hantek6022BL2.AddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,Hantek6022BLX862.SYS
+
+[Hantek6022BL2.amd64.AddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,Hantek6022BLAMD642.SYS
+
+[Hantek6022BL2.ia64.AddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,Hantek6022BLIA642.SYS
+
+
+[Hantek6022BL2.Files.Ext]
+Hantek6022BLX862.SYS
+
+[Hantek6022BL2.Files.Ext.amd64]
+Hantek6022BLAMD642.SYS
+
+[Hantek6022BL2.CopyFiles.Ext.I64]
+Hantek6022BLIA642.SYS
+
+;[Hantek6022BL2.Files.Inf]
+;Hantek6022BLusb.INF
+
+;First driver
+
+[Hantek6022BL1.Dev]
+CopyFiles=Hantek6022BL1.Files.Ext;, Hantek6022BL1.Files.Inf
+AddReg=Hantek6022BL1.AddReg
+
+[Hantek6022BL1.Dev.NT]
+CopyFiles=Hantek6022BL1.Files.Ext;, Hantek6022BL1.Files.Inf
+AddReg=Hantek6022BL1.AddReg
+
+[Hantek6022BL1.Dev.NTamd64]
+CopyFiles = Hantek6022BL1.Files.Ext.amd64, Hantek6022BL1.Files.Inf
+AddReg    = Hantek6022BL1.amd64.AddReg
+
+[Hantek6022BL1.Dev.NTia64]
+CopyFiles = Hantek6022BL1.Files.Ext.I64, Hantek6022BL1.Files.Inf
+AddReg    = Hantek6022BL1.ia64.AddReg
+
+;;;;;;;;;;
+
+[Hantek6022BL1.Dev.NT.Services]
+Addservice = Hantek6022BL1, 0x00000002, Hantek6022BL1.AddService
+
+[Hantek6022BL1.Dev.NTamd64.Services]
+AddService = Hantek6022BL1, 0x00000002, Hantek6022BL1.AddServiceAmd64
+
+[Hantek6022BL1.Dev.NTia64.Services]
+AddService = Hantek6022BL1, 0x00000002, Hantek6022BL1.AddServiceIA64
+
+[Hantek6022BL1.AddService]
+DisplayName    = %Hantek6022BL1.SvcDesc%
+ServiceType    = 1                  
+StartType      = 3                  
+ErrorControl   = 1                 
+ServiceBinary  = %10%\System32\Drivers\Hantek6022BLX861.sys
+LoadOrderGroup = Base
+
+[Hantek6022BL1.AddServiceAmd64]
+DisplayName   = %Hantek6022BL1.SvcDesc%
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %10%\System32\Drivers\Hantek6022BLAMD641.sys
+LoadOrderGroup = Base
+
+[Hantek6022BL1.AddServiceIA64]
+DisplayName   = %Hantek6022BL1.SvcDesc%
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %10%\System32\Drivers\Hantek6022BLIA641.SYS
+LoadOrderGroup = Base
+
+[Hantek6022BL1.AddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,Hantek6022BLX861.sys
+
+[Hantek6022BL1.amd64.AddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,Hantek6022BLAMD641.SYS
+
+[Hantek6022BL1.ia64.AddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,Hantek6022BLIA641.SYS
+
+[Hantek6022BL1.Files.Ext]
+Hantek6022BLX861.sys
+
+[Hantek6022BL1.Files.Ext.amd64]
+Hantek6022BLAMD641.SYS
+
+[Hantek6022BL1.Files.Ext.I64]
+Hantek6022BLIA641.SYS
+
+;[Hantek6022BL1.Files.Inf]
+;Hantek6022BLusb.INF
+
+[Strings]
+ClassName="Hantek6022BL"
+ODM="ODM "
+USB\VID_04B4&PID_602A.DeviceDesc="Hantek6022BL DRIVER 1"
+USB\VID_04B5&PID_602A.DeviceDesc="Hantek6022BL DRIVER 2"
+Hantek6022BL1.SvcDesc="Hantek6022BL DRIVER 1"
+Hantek6022BL2.SvcDesc="Hantek6022BL DRIVER 2"

@@ -185,7 +185,7 @@ def ImageProcessing():
     Success = 0
     readImage = None
     c_unknown = 0
-    while(Success < 10):
+    while(Success < 20):
         temp = 'Unknown'
         # serialPort = serial_connecting()
         while temp is 'Unknown':
@@ -212,7 +212,7 @@ def ImageProcessing():
 
 def ProcessIMG_out(): # ! <<<< ------ RUN and return what is image :)
     Success_rate = 0
-    while(Success_rate < 7):
+    while(Success_rate < 10):
         output  = ImageProcessing()
         if output != 'Unknown':
             Success_rate += 1
@@ -225,7 +225,7 @@ def ProcessIMG_out(): # ! <<<< ------ RUN and return what is image :)
 
 
 def serial_connecting(): #! <<< ------ Serial Port Setting
-    serialPort = serial.Serial('COM16', 115200, timeout=1)
+    serialPort = serial.Serial('COM3', 115200, timeout=1)
     return serialPort
 
 def gotoBYTE(cha):
@@ -270,6 +270,7 @@ python_input = None
 
 storage = []
 allpic = None
+temp_keep = []
 #! VOID LOOP ------------------------------
 while(1):
     # while not keyboard.i_pressed('q'):
@@ -282,6 +283,7 @@ while(1):
             os.remove("C:\\out\\Pic.bmp")
             time.sleep(5)
             current_img = ProcessIMG_out()
+            temp_keep.append(current_img)
             current_img = imageToint(current_img)
             storage.append(current_img)
             
@@ -290,6 +292,7 @@ while(1):
             os.remove("C:\\out\\Pic.bmp")
             time.sleep(5)
             current_img = ProcessIMG_out()
+            temp_keep.append(current_img)
             current_img = imageToint(current_img)
             storage.append(current_img)
             
@@ -298,12 +301,14 @@ while(1):
             os.remove("C:\\out\\Pic.bmp")
             time.sleep(5)
             current_img = ProcessIMG_out()
+            temp_keep.append(current_img)
             current_img = imageToint(current_img)
             storage.append(current_img)
             # time.sleep(3)
             
             for i in range(0,3):
                 storage[i] = bytes(storage[i], 'utf')
+            print(temp_keep)
             print(storage)
 
             arduino = '' ###### !  <-----------------  RESET arduino when END step ------------------------
@@ -351,10 +356,12 @@ while(1):
             print('Arduino got all Image')
             arduino = ''
 
-            while arduino != b'g': #!    asdasdadasdasdasd
+            while arduino != b'g':  #! if got order , OUT this loop
                 if Ser.inWaiting():
                     arduino = Ser.read()
-            print('tested')
+            print('python tell Arduino waiting for PC1 order')
+
+            print('DONE')
             pause()
 
                 # Ser.write(data)

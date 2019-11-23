@@ -3,13 +3,14 @@ Servo upper,under; //ประกาศตัวแปรแทน Servo กำ�
 //left
 //mid 81 83
 //right 82 42
-int up = 81,down = 83;
+int up = 74,down = 83;
 char python;
 int first_count = 0;
 int MODE = 0;
 int DATA[3];
 int c_data_got = 0;
 
+char asd = 'l';
 
 void setup()
 {
@@ -34,7 +35,10 @@ void loop(){
     python_send_all_img();
   }
   else if(MODE == 3){
-    wait_PC1();
+    wait_PC1(asd);
+  }
+  else if(MODE == 4){
+    Pause();
   }
 }
 
@@ -47,15 +51,15 @@ void Pause(){
 
 void goMID(){
   upper.write(up);
-  under.write(83);
+  under.write(86);
 }
 void goLEFT(){
-  upper.write(up);
+  upper.write(77);
   under.write(134);
 }
 
 void goRIGHT(){
-  upper.write(up);
+  upper.write(74);
   under.write(41);
 }
 
@@ -85,6 +89,28 @@ void react2(){
     delay(200);
     goRIGHT();
     delay(200);
+}
+
+char decode_order_PC1(char x){
+  if(x == 'l'){
+    delay(100);
+    goLEFT();
+    return x;
+  }
+  else if(x == 'm'){
+    delay(100);
+    goMID();
+    return x;
+  }
+  else if(x == 'r'){
+    delay(100);
+    goRIGHT();
+    return x;
+  }
+  else{
+    x = 'X';
+    return x;
+  }
 }
 
 void PC1_first_Order(){
@@ -121,7 +147,6 @@ void PC2_taken_img(){
     }
   }
 }
-
 
 void python_send_all_img(){
 
@@ -169,12 +194,20 @@ void python_send_all_img(){
   }
 }
 
-void wait_PC1(){
-  // NINE
-  while(1){
-    delay(1000);
+
+// ------------------------------------------------------------------------------------------- //
+
+void wait_PC1(char in){
+  if(decode_order_PC1(in) != 'X'){
+     // got order 
+     Serial.print('g');
+      react1();
+      react2();
+      goMID();
+      MODE = 4;
   }
-  react1();
-  RIGHT();
-  MODE = 4;
+  else{
+    /// ------ send NAK back to PC1 ------ ///
+  }
+  
 }
