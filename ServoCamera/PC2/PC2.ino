@@ -153,7 +153,7 @@ void loop() {
         //        Serial.println(state);
       }
       count++;
-      //      Serial.println(count);
+            Serial.println(count);
 
     }
     check = false;
@@ -205,7 +205,8 @@ void loop() {
 
 
           //Start Send Pic to PC1 Step2
-          //          sendPic();
+          sendPic(DATA[0]-65,DATA[1]-65,DATA[2]-65);
+//          sendPic(0,1,2);
         }
       }
 
@@ -225,7 +226,7 @@ void loop() {
   }
 }
 
-void createFrame(int changeMode, int num, int pic)
+void createFrame(int changeMode, int angle, int pic)
 {
   ///change mode loop
   for (int i = 1; i < 4; i++)
@@ -242,10 +243,14 @@ void createFrame(int changeMode, int num, int pic)
     }
   }
 
-  else if (changeMode == SENDPIC)
+  else if (changeMode == 2)
   {
     //Set Payload
-    setPayload(num, pic);
+    setPayload(angle, pic);
+    for (int i = 4; i < 9; i++)
+    {
+      newFrame[i] = payload[i-4];
+    }
   }
 
   ///change parity bit
@@ -263,8 +268,8 @@ void setPayload(int angle, int pic)
   };
   int setPic[7][3] = {
     {0, 0, 1},
-    {0, 0, 1},
-    {0, 0, 1},
+    {0, 1, 0},
+    {0, 1, 1},
     {1, 0, 0},
     {1, 0, 1},
     {1, 1, 0},
@@ -272,18 +277,21 @@ void setPayload(int angle, int pic)
   };
   payload[0] = set[angle][0];
   payload[1] = set[angle][1];
-  payload[2] = set[pic][0];
-  payload[3] = set[pic][1];
-  payload[4] = set[pic][2];
+  payload[2] = setPic[pic][0];
+  payload[3] = setPic[pic][1];
+  payload[4] = setPic[pic][2];
 }
 void sendPic(int pic1, int pic2, int pic3) {
-  createFrame(ACK, 0, pic1);
+  Serial.println();
+  createFrame(SENDPIC, 0, pic1);
   sendFrame(newFrame);
+  Serial.println();
   delay(1000);
-  createFrame(ACK, 1, pic2);
+  createFrame(2, 1, pic2);
   sendFrame(newFrame);
+  Serial.println();
   delay(1000);
-  createFrame(ACK, 2, pic3);
+  createFrame(2, 2, pic3);
   sendFrame(newFrame);
   delay(1000);
 }
@@ -300,22 +308,22 @@ void sendFrame(int *frameToSend)
     if (copyFrame[i] == 0 && copyFrame[i + 1] == 0)
     {
       temp = 0;
-//      Serial.print("00");
+      Serial.print("00");
     }
     if (copyFrame[i] == 0 && copyFrame[i + 1] == 1)
     {
       temp = 1;
-//      Serial.print("01");
+      Serial.print("01");
     }
     if (copyFrame[i] == 1 && copyFrame[i + 1] == 0)
     {
       temp = 2;
-//      Serial.print("10");
+      Serial.print("10");
     }
     if (copyFrame[i] == 1 && copyFrame[i + 1] == 1)
     {
       temp = 3;
-//      Serial.print("11");
+      Serial.print("11");
     }
     sendFSK(temp);
     //Serial.print(temp);

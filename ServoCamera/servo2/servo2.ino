@@ -1,18 +1,14 @@
 #include <Servo.h>
 Servo upper,under; //ประกาศตัวแปรแทน Servo กำหนดข
-char tmp;
 //left
 //mid 81 83
 //right 82 42
 int up = 81,down = 83;
-
 char python;
-
 int first_count = 0;
 int MODE = 0;
-
 int DATA[3];
-int data_count = 0;
+int c_data_got = 0;
 
 
 void setup()
@@ -38,7 +34,7 @@ void loop(){
     python_send_all_img();
   }
   else if(MODE == 3){
-    Pause();
+    wait_PC1();
   }
 }
 
@@ -50,17 +46,45 @@ void Pause(){
 }
 
 void goMID(){
-  upper.write(81);
+  upper.write(up);
   under.write(83);
 }
 void goLEFT(){
-  upper.write(81);
+  upper.write(up);
   under.write(134);
 }
 
 void goRIGHT(){
-  upper.write(81);
+  upper.write(up);
   under.write(41);
+}
+
+void react1(){
+      goMID();
+      delay(200);
+      goLEFT();
+      delay(200);
+      goMID();
+      delay(200);
+      goLEFT();
+      delay(200);
+      goMID();
+      delay(200);
+      goLEFT();
+      delay(200);
+}
+
+void react2(){
+    goRIGHT();
+    delay(200);
+    goMID();
+    delay(200);
+    goRIGHT();
+    delay(200);
+    goMID();
+    delay(200);
+    goRIGHT();
+    delay(200);
 }
 
 void PC1_first_Order(){
@@ -91,45 +115,66 @@ void PC2_taken_img(){
   if(Serial.available() > 0){
     python = Serial.read();
     if(python == '4'){
-      upper.write(81);
-      under.write(83);
+//      react1();
       MODE = 2;
       Serial.print('n');
     }
   }
 }
 
-void python_send_all_img(){
-  if(Serial.available() > 0){
-    python = Serial.read();
-    if(python == '1'){
-      python = Serial.read();
-      DATA[0] = python;
-      data_count = 1;
-      goRIGHT();
-      while(1)
-      Serial.print('2');
-    }
-    else if(python == '2'){
-      python = Serial.read();
-      DATA[1] = python;
-      data_count = 2;
-      goMID();
-      Serial.print('3');
-    }
-    else if(python == '3'){
-      python = Serial.read();
-      DATA[2] = python;
-      data_count = 3;
-      goLEFT();
-      Serial.print('q');
-    }
-  }
-  if(data_count == 3){
-    Serial.print('g');
-    for(int i=0;i<3;i++) Serial.print(DATA[i]);
-    MODE = 3;
-  }
 
-  
+void python_send_all_img(){
+
+  if( Serial.available() > 0){
+    python = Serial.read();
+    if(python == 's' and c_data_got == 0){
+//      react1();
+//      react2();
+//      goMID();
+      Serial.print('g'); // <---- ready for receive data
+//      goRIGHT();
+      c_data_got = 1;
+    }
+    else if(python != 's' and c_data_got == 1){ // DATA 1
+//      react1();
+//      react2();
+      DATA[0] = python;
+      Serial.print('g'); // <---- got data , send ack back
+      c_data_got = 2;
+    }
+    else if(python != 's' and c_data_got == 2){ // DATA 2
+//      react2();
+//      react1();
+      DATA[1] = python;
+      Serial.print('g'); // <---- got data , send ack back
+      c_data_got = 3;
+      
+    }
+    else if(python != 's' and c_data_got == 3){ // DATA 2
+//      react2();
+//      react1();
+      DATA[2] = python;
+      Serial.print('g'); // <---- got data , send ack back
+      c_data_got = 4;
+    }
+    else if(python != 's' and c_data_got == 4){
+      Serial.print('g');
+      MODE = 3;
+      for(int i=0;i<3;i++){
+        Serial.print(DATA[i]);
+      }
+      delay(1000);
+      Serial.print('g');
+    } 
+  }
+}
+
+void wait_PC1(){
+  // NINE
+  while(1){
+    delay(1000);
+  }
+  react1();
+  RIGHT();
+  MODE = 4;
 }

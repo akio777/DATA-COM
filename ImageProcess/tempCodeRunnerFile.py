@@ -1,2 +1,1 @@
-
-    # current_img = ProcessIMG_out()
+Ser.write(b'1')
