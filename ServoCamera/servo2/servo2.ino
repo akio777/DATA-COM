@@ -212,11 +212,29 @@ void wait_python_take_image(){  // MODE == 4
       c_data_got = 5;
       Serial.print('g');
     }
-    if(python != 's' and c_data_got ==5){
+    else if(python != 's' and c_data_got ==5){
       data_req = python;
       Serial.print('g');
       c_data_got == 6;
-      MODE = 5;
+    }
+    else if(python != 's' and c_data_got == 6){  // SEND DATA to python for check
+      Serial.print(data_req);
+      delay(100);
+      Serial.print('g');
     }
   }
+}
+
+
+void send_image_back_to_PC1(){
+
+  
+
+
+
+
+
+
+
+  
 }

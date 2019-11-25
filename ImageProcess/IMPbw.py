@@ -384,62 +384,17 @@ while(1):
                 if Ser.inWaiting():
                     arduino = Ser.read()
                 Ser.write(current_img)
-            print('SEND request Image from PC1 already')
+            print('SEND request Image to PC1 already')
             arduino = ''
 
-
+            while arduino != b'g':
+                if Ser.inWaiting():
+                    arduino = Ser.read()
+                print(arduino)
+            arduino = ''
             print('DONE')
             pause()
-
-                # Ser.write(data)
-                # while arduino != b'g':
-                #     Ser.write(b'1')
-                #     time.sleep(0.1)
-                #     Ser.write(data)
-                #     time.sleep(0.1)
-                #     arduino = Ser.read()
-                #     time.sleep(0.1)
-                #     print(arduino)
-                
-                # print('arduino got 1')
-                # arduino = ''
-                # print('can send 2')
-                # while(1):
-                #     arduino = Ser.read()
-                #     print(arduino)
-                    
-                
-
-                # Ser.write(data)
-                # # while arduino != b'2':
-                # if Ser.inWaiting():
-                #     arduino = Ser.read()
-                # print(arduino)
-
-                # data = int(storage[1], 2)
-                # print('send 2')
-                # Ser.write(b'2')
-                # Ser.write(data)
-                
-                # if Ser.inWaiting():
-                #     arduino = Ser.read()
-
-                # data1 = int(storage[2], 2)
-                # print('send 3')
-                # Ser.write(b'3')
-                # Ser.write(data)
-                
-
-            arduino = ''
-            print('-----------------------------------')
-            while Ser.in_waiting != 3:
-                pass
-            print(Ser.read_all())
-            print('---------------------------------')
-            pause()
-            
-                
-
+       
     # current_img = ProcessIMG_out()
     # print(current_img)
     
