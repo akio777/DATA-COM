@@ -185,7 +185,7 @@ def ImageProcessing():
     Success = 0
     readImage = None
     c_unknown = 0
-    while(Success < 20):
+    while(Success < 10):
         temp = 'Unknown'
         # serialPort = serial_connecting()
         while temp is 'Unknown':
@@ -212,7 +212,7 @@ def ImageProcessing():
 
 def ProcessIMG_out(): # ! <<<< ------ RUN and return what is image :)
     Success_rate = 0
-    while(Success_rate < 10):
+    while(Success_rate < 5):
         output  = ImageProcessing()
         if output != 'Unknown':
             Success_rate += 1
@@ -276,12 +276,12 @@ while(1):
     # while not keyboard.i_pressed('q'):
     if Ser.inWaiting():
         arduino = Ser.read()
-        if arduino == b'R':
+        if arduino == b'R': #!  ---------------------------       MODE == 0
             print('- - - PC1 Order PC2 take all pictures - - -')
 
             Ser.write(b'r') #! <--- -45 angle
             os.remove("C:\\out\\Pic.bmp")
-            time.sleep(5)
+            time.sleep(4)
             current_img = ProcessIMG_out()
             temp_keep.append(current_img)
             current_img = imageToint(current_img)
@@ -290,7 +290,7 @@ while(1):
 
             Ser.write(b'm') #! <--- 0 angle
             os.remove("C:\\out\\Pic.bmp")
-            time.sleep(5)
+            time.sleep(4)
             current_img = ProcessIMG_out()
             temp_keep.append(current_img)
             current_img = imageToint(current_img)
@@ -299,7 +299,7 @@ while(1):
 
             Ser.write(b'l') #! <--- 45 angle
             os.remove("C:\\out\\Pic.bmp")
-            time.sleep(5)
+            time.sleep(4)
             current_img = ProcessIMG_out()
             temp_keep.append(current_img)
             current_img = imageToint(current_img)
@@ -311,9 +311,9 @@ while(1):
             print(temp_keep)
             print(storage)
 
-            arduino = '' ###### !  <-----------------  RESET arduino when END step ------------------------
+            arduino = '' ## !  <--- RESET arduino when END step
 
-            print('tell arduino for send all img')
+            print('tell arduino for send all img')  #! -------------------------- MODE == 1
             while arduino != b'n': #! @ <--- n = next step
                 if Ser.inWaiting():
                     arduino = Ser.read()
@@ -321,7 +321,7 @@ while(1):
                 time.sleep(0.1)
             arduino= ''
             
-            print('send all img')
+            print('send all img')  #!  <-----------------------------------------  MODE  == 2
             while arduino != b'g': #! @ <--- send 's' until ack 'g' back
                 if Ser.inWaiting():
                     arduino = Ser.read()
@@ -349,17 +349,44 @@ while(1):
                 Ser.write(storage[2])
             print('send data3 already')
             arduino = ''
-
+                                    
             while arduino != b'g':  #!    got all DATA , send ack back to python
                 if Ser.inWaiting():
                     arduino = Ser.read()
-            print('Arduino got all Image')
+                    print(arduino)
+            print('Arduino got all Image')  #! <--- if print this , it's mean   MODE 2 = > 3
             arduino = ''
 
-            while arduino != b'g':  #! if got order , OUT this loop
+            while arduino != b'g':  #! if got order , OUT this loop    MODE == 3
                 if Ser.inWaiting():
                     arduino = Ser.read()
-            print('python tell Arduino waiting for PC1 order')
+                # Ser.write(b'r')
+            print('Arduino got order from PC1 !!!!')
+            arduino = ''
+            
+            os.remove("C:\\out\\Pic.bmp")       #!  wait_python_take_image ----   MODE == 4
+            time.sleep(4)
+            current_img = ProcessIMG_out()
+            temp_keep.append(current_img)
+            current_img = imageToint(current_img)
+            current_img = bytes(current_img, 'utf')
+
+
+            while arduino != b'g': #! <----- send to arduino , taken already prepair for recieve img
+                if Ser.inWaiting():
+                    arduino = Ser.read()
+                Ser.write(b's')
+            print('tell arduino , taken image already')
+            arduino = ''
+            time.sleep(0.1)
+
+            while arduino != b'g': #!    ......... SEND IMAGE to arduino
+                if Ser.inWaiting():
+                    arduino = Ser.read()
+                Ser.write(current_img)
+            print('SEND request Image from PC1 already')
+            arduino = ''
+
 
             print('DONE')
             pause()

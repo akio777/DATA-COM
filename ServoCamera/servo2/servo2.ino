@@ -9,8 +9,7 @@ int first_count = 0;
 int MODE = 0;
 int DATA[3];
 int c_data_got = 0;
-
-char asd = 'l';
+int data_req = 0;
 
 void setup()
 {
@@ -35,9 +34,11 @@ void loop(){
     python_send_all_img();
   }
   else if(MODE == 3){
-    wait_PC1(asd);
+    wait_PC1(   'r'  );   // <-------------------------------  pc1 what u want (l m r)
   }
   else if(MODE == 4){
+    wait_python_take_image();
+  }else if(MODE == 5){
     Pause();
   }
 }
@@ -50,17 +51,17 @@ void Pause(){
 }
 
 void goMID(){
-  upper.write(up);
-  under.write(86);
+  upper.write(78);
+  under.write(83);
 }
 void goLEFT(){
   upper.write(77);
-  under.write(134);
+  under.write(133);
 }
 
 void goRIGHT(){
-  upper.write(74);
-  under.write(41);
+  upper.write(79);
+  under.write(44);
 }
 
 void react1(){
@@ -73,8 +74,6 @@ void react1(){
       goLEFT();
       delay(200);
       goMID();
-      delay(200);
-      goLEFT();
       delay(200);
 }
 
@@ -91,29 +90,8 @@ void react2(){
     delay(200);
 }
 
-char decode_order_PC1(char x){
-  if(x == 'l'){
-    delay(100);
-    goLEFT();
-    return x;
-  }
-  else if(x == 'm'){
-    delay(100);
-    goMID();
-    return x;
-  }
-  else if(x == 'r'){
-    delay(100);
-    goRIGHT();
-    return x;
-  }
-  else{
-    x = 'X';
-    return x;
-  }
-}
 
-void PC1_first_Order(){
+void PC1_first_Order(){ // MODE == 0
   Serial.print('R');
   if(Serial.available() > 0){
     python = Serial.read();
@@ -136,7 +114,7 @@ void PC1_first_Order(){
   }
 }
 
-void PC2_taken_img(){
+void PC2_taken_img(){ // MODE == 1
 //  Serial.print('n');
   if(Serial.available() > 0){
     python = Serial.read();
@@ -148,7 +126,7 @@ void PC2_taken_img(){
   }
 }
 
-void python_send_all_img(){
+void python_send_all_img(){ // MODE == 2
 
   if( Serial.available() > 0){
     python = Serial.read();
@@ -183,13 +161,13 @@ void python_send_all_img(){
       c_data_got = 4;
     }
     else if(python != 's' and c_data_got == 4){
-      Serial.print('g');
       MODE = 3;
       for(int i=0;i<3;i++){
         Serial.print(DATA[i]);
       }
-      delay(1000);
       Serial.print('g');
+      MODE = 3;
+      
     } 
   }
 }
@@ -197,17 +175,48 @@ void python_send_all_img(){
 
 // ------------------------------------------------------------------------------------------- //
 
-void wait_PC1(char in){
-  if(decode_order_PC1(in) != 'X'){
-     // got order 
-     Serial.print('g');
-      react1();
-      react2();
-      goMID();
-      MODE = 4;
+void wait_PC1(char in){    //  MODE == 3
+//   if(Serial.available() > 0){
+//      in = Serial.read();
+      if(in == 'm'){
+        goMID();
+        MODE = 4;
+        Serial.print('g');
+        delay(1000);
+        MODE = 4;
+      }
+      else if(in == 'l'){
+        goLEFT();
+        MODE = 4;
+        Serial.print('g');
+        delay(1000);
+        MODE = 4;
+      }
+      else if(in == 'r'){
+        goRIGHT();
+        MODE = 4;
+        Serial.print('g');
+        delay(1000);
+        MODE = 4;
+      }
+      else if(in == 'X'){ // DATA lost , send nack   NINE NINE NINE NINE NINE NINE
+        /////
+      }
+//   }
+}
+
+void wait_python_take_image(){  // MODE == 4
+  if(Serial.available() > 0){
+    python = Serial.read();
+    if(python == 's' and c_data_got == 4){
+      c_data_got = 5;
+      Serial.print('g');
+    }
+    if(python != 's' and c_data_got ==5){
+      data_req = python;
+      Serial.print('g');
+      c_data_got == 6;
+      MODE = 5;
+    }
   }
-  else{
-    /// ------ send NAK back to PC1 ------ ///
-  }
-  
 }
