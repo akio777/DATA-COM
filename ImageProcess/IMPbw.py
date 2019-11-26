@@ -279,9 +279,12 @@ while(1):
         if arduino == b'R': #!  ---------------------------       MODE == 0
             print('- - - PC1 Order PC2 take all pictures - - -')
 
+            storage = []
+            temp_keep = []
+
             Ser.write(b'r') #! <--- -45 angle
             os.remove("C:\\out\\Pic.bmp")
-            time.sleep(5)
+            time.sleep(7)
             current_img = ProcessIMG_out()
             temp_keep.append(current_img)
             current_img = imageToint(current_img)
@@ -290,7 +293,7 @@ while(1):
 
             Ser.write(b'm') #! <--- 0 angle
             os.remove("C:\\out\\Pic.bmp")
-            time.sleep(5)
+            time.sleep(7)
             current_img = ProcessIMG_out()
             temp_keep.append(current_img)
             current_img = imageToint(current_img)
@@ -299,7 +302,7 @@ while(1):
 
             Ser.write(b'l') #! <--- 45 angle
             os.remove("C:\\out\\Pic.bmp")
-            time.sleep(5)
+            time.sleep(7)
             current_img = ProcessIMG_out()
             temp_keep.append(current_img)
             current_img = imageToint(current_img)
@@ -311,7 +314,6 @@ while(1):
                 storage[i] = bytes(storage[i], 'utf')
             print(temp_keep)
             print(storage)
-
             arduino = '' ## !  <--- RESET arduino when END step
             
 

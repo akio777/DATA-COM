@@ -198,17 +198,20 @@ void loop() {
           sendFrame(newFrame);
           delay(1000);
 
-          ////////////
+          //////////
           PC1_first_Order();
           PC2_taken_img();
           python_send_img_to_arduino();
-          ////////////
+          //////////
+          MODE = 0;
+          c_data = 0;
+          first_count = 0;
 
-//          sendPic(DATA[0] - 65, DATA[1] - 65, DATA[2] - 65);
-          sendPic(DATA[1] - 65, DATA[2]-65, DATA[3]-65);
-          for(int i=0;i<4;i++){
-            DATA[i] = 0;
-          }
+          //        sendPic(0 , 1, 2);
+          sendPic(DATA[1] - 65, DATA[2] - 65, DATA[3] - 65);
+          //          for (int i = 0; i < 4; i++) {
+          //            DATA[i] = 0;
+          //          }
           //Start Send Pic to PC1 Step2
           //          if(DATA[2] != 0)
 
@@ -224,6 +227,7 @@ void loop() {
           if (str[4] == '0' && str[5] == '1') { // -45
             while (stateMode != 4) {
               sendData(DATA[1] - 65);
+              //              sendData(0);
             }
 
             stateMode = 0;
@@ -231,12 +235,14 @@ void loop() {
           else if (str[4] == '0' && str[5] == '0') { // 0
             while (stateMode != 4) {
               sendData(DATA[2] - 65);
+              //              sendData(1);
             }
             stateMode = 0;
           }
           else if (str[4] == '1' && str[5] == '0') { // 45
             while (stateMode != 4) {
               sendData(DATA[3] - 65);
+              //              sendData(2);
             }
 
           }
@@ -384,6 +390,7 @@ void sendData(int pic) { //Send Data
     createFrame(SENDDATA, 0, pic);
     sendFrame(newFrame);
     stateMode = 1;
+    //    delay(1000);
   }
   else {
     int tmp = analogRead(A2);
@@ -454,23 +461,23 @@ void sendData(int pic) { //Send Data
         //          Serial.print(str[i]);
         //        Serial.println();
         //    Serial.print((char)value)
-        delay(2000);
+        //        delay(2000);
         if (str[1] == '1' && str[2] == '1' && str[3] == '1' && stateMode == 1) {
           createFrame(SENDDATA, 1, pic);
           sendFrame(newFrame);
-          //delay(1000);
+          //          delay(1000);
           stateMode = 2;
         }
         else if (str[1] == '1' && str[2] == '1' && str[3] == '1' && stateMode == 2) {
           createFrame(SENDDATA, 2, pic);
           sendFrame(newFrame);
-          //delay(1000);
+          //          delay(1000);
           stateMode = 3;
         }
         else if (str[1] == '1' && str[2] == '1' && str[3] == '1' && stateMode == 3) {
           createFrame(SENDDATA, 3, pic);
           sendFrame(newFrame);
-          //delay(1000);
+          //          delay(1000);
           stateMode = 4;
         }
         index = 0;
@@ -733,24 +740,25 @@ void PC1_first_Order() { // MODE == 0
   while (MODE == 0) {
     if (Serial.available() > 0) {
       python = Serial.read();
-    }
-    if (python == 'm') {
-      goMID();
-      first_count += 1;
-      python = ' ';
-    }
-    else if (python == 'l') {
-      goLEFT();
-      first_count += 1;
-      python = ' ';
-    }
-    else if (python == 'r') {
-      goRIGHT();
-      first_count += 1;
-      python = ' ';
-    }
-    if (first_count == 3) {
-      MODE = 1;
+      //    }
+      if (python == 'm') {
+        goMID();
+        first_count += 1;
+        python = ' ';
+      }
+      else if (python == 'l') {
+        goLEFT();
+        first_count += 1;
+        python = ' ';
+      }
+      else if (python == 'r') {
+        goRIGHT();
+        first_count += 1;
+        python = ' ';
+      }
+      if (first_count == 3) {
+        MODE = 1;
+      }
     }
   }
 }
@@ -759,15 +767,12 @@ void PC2_taken_img() { // MODE == 1
   while (MODE == 1) {
     if (Serial.available() > 0) {
       python = Serial.read();
+      if (python == '4') {
+        //      delay(100);
+        Serial.print('n'); // <---------- send to python ' NEXT STEP'
+        MODE = 2;
+      }
     }
-    if (python == '4') {
-      //      delay(100);
-      Serial.print('n'); // <---------- send to python ' NEXT STEP'
-      MODE = 2;
-    }
-  }
-  for(int i=0;i<4;i++){
-    DATA[i] = 0;
   }
 }
 
@@ -776,45 +781,45 @@ void python_send_img_to_arduino() {   ///  MODE == 2
 
     if (Serial.available() > 0) {
       python = Serial.read();
-      
-      if(python == 's'){   // Start sending image
+
+      if (python == 's') { // Start sending image
         Serial.print('g');
         react1();
         Serial.flush();
       }
 
-      if(python != 's' and c_data == 0 and python != 'g'){  // DATA 1
+      if (python != 's' and c_data == 0 and python != 'g') { // DATA 1
         DATA[0] = python;
         Serial.print('g');
         react2();
         Serial.flush();
         c_data = 1;
       }
-      else if(python != 's' and c_data == 1 and python != 'g'){  // DATA 2
+      else if (python != 's' and c_data == 1 and python != 'g') { // DATA 2
         DATA[1] = python;
         Serial.print('g');
         react2();
         Serial.flush();
         c_data = 2;
       }
-      else if(python != 's' and c_data == 2 and python != 'g'){  // DATA 3
+      else if (python != 's' and c_data == 2 and python != 'g') { // DATA 3
         DATA[2] = python;
         Serial.print('g');
         react2();
         Serial.flush();
         c_data = 3;
       }
-      else if(python != 's' and c_data == 3 and python != 'g'){  // DATA 4
+      else if (python != 's' and c_data == 3 and python != 'g') { // DATA 4
         DATA[3] = python;
         Serial.print('g');
         react2();
         Serial.flush();
         c_data = 4;
-      } 
+      }
 
 
     }
-    if (c_data == 4){
+    if (c_data == 4) {
       MODE = 3;
     }
 
@@ -823,19 +828,15 @@ void python_send_img_to_arduino() {   ///  MODE == 2
 }
 
 void check_data_from_python() {   // MODE = 3
-//  while (MODE == 3) {
-//    if (Serial.available() > 0) {
-//      python = Serial.read();
-//      if (python == 'a') {
-//        delay(100);
-//        Serial.print('n');
-//      }
-//    }
-//    MODE = 4;
-//  }
+  //  while (MODE == 3) {
+  //    if (Serial.available() > 0) {
+  //      python = Serial.read();
+  //      if (python == 'a') {
+  //        delay(100);
+  //        Serial.print('n');
+  //      }
+  //    }
+  //    MODE = 4;
+  //  }
 
 }
-
-
-
-
