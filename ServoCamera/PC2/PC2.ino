@@ -39,6 +39,7 @@ int times = 0;
 int index = 0;
 int state = 0;
 bool check = false;
+int stateMode = 0;
 
 
 int delay0, delay1, delay2, delay3;
@@ -52,6 +53,7 @@ void sendFrame(int*);
 void sendFSK(int);
 void setPayload(int, int);
 void sendPic(int, int, int);
+void receive();
 
 long timeOut = 3000, timer = 0;
 bool getAck = false;
@@ -70,6 +72,7 @@ int mode[8][3] = {
 int payload[5] = {0, 0, 0, 0, 0};
 char in;
 String inMode = "";
+char str[12];
 
 
 // PYTHON -------------------------------------- //
@@ -78,12 +81,14 @@ Servo upper, under; //ประกาศตัวแปรแทน Servo กำ
 //left
 //mid 81 83
 //right 82 42
-int up = 81, down = 83;
+int up = 74, down = 83;
 char python;
 int first_count = 0;
 int MODE = 0;
-int DATA[3];
-int c_data_got = 0;
+int DATA[4] = {0, 0, 0, 0};
+int c_data = 0;
+int data_req = 0;
+
 
 
 void setup() {
@@ -116,8 +121,8 @@ void reset_millis()
 }
 void loop() {
   int tmp = analogRead(A2);
-  //    Serial.println(tmp);
-  char str[12];
+  //        Serial.println(tmp);
+
   if (tmp - prev > r_slope && check == false) {
     MAX = 0;
     check = true;
@@ -153,7 +158,7 @@ void loop() {
         //        Serial.println(state);
       }
       count++;
-            Serial.println(count);
+      //      Serial.println(count);
 
     }
     check = false;
@@ -177,44 +182,67 @@ void loop() {
       state = 7;
     }
     if (state == 7) {
-//      react1();
+      //      react1();
       //      long value = strtol(str, NULL, 2);
-      for (int i = 0; i < 12; i++)
-        Serial.print(str[i]);
-      Serial.println();
+      //      for (int i = 0; i < 12; i++)
+      //        Serial.print(str[i]);
+      //      Serial.println();
       //    Serial.print((char)value);
       delay(2000);
       if (str[1] == '1' && str[2] == '1' && str[3] == '1'); //ACK
 
       else if (str[1] == '0' && str[2] == '0' && str[3] == '1') { //Start PC1 -> PC2
         if (str[10] == '1' && str[11] == '1') { //Stop bit
+          //          Serial.println('R');
           createFrame(ACK, 0, 0);
           sendFrame(newFrame);
           delay(1000);
-          //          Serial.print('R');
-          //          first_order(); //Start Shooting Pic
-          if (MODE == 0) {
-            PC1_first_Order();
-          }
-          else if (MODE == 1) {
-            PC2_taken_img();
-          }
-          else if (MODE == 2) {
-            python_send_all_img();
-          }
 
+          ////////////
+          PC1_first_Order();
+          PC2_taken_img();
+          python_send_img_to_arduino();
+          ////////////
 
+//          sendPic(DATA[0] - 65, DATA[1] - 65, DATA[2] - 65);
+          sendPic(DATA[1] - 65, DATA[2]-65, DATA[3]-65);
+          for(int i=0;i<4;i++){
+            DATA[i] = 0;
+          }
           //Start Send Pic to PC1 Step2
-          sendPic(DATA[0]-65,DATA[1]-65,DATA[2]-65);
-//          sendPic(0,1,2);
+          //          if(DATA[2] != 0)
+
+
         }
       }
 
-      //      else if (str[2] == '0' && str[3] == '1' && str[4] == '1') { //Start Send data back to PC1
-      //        createFrame(ACK);
-      //        sendFrame(newFrame);
-      //        //Start Send
-      //      }
+      else if (str[1] == '0' && str[2] == '1' && str[3] == '1') { //Start Send data back to PC1
+        if (str[10] == '1' && str[11] == '1') { //Stop bit
+          createFrame(ACK, 0, 0);
+          sendFrame(newFrame);
+          delay(1000);
+          if (str[4] == '0' && str[5] == '1') { // -45
+            while (stateMode != 4) {
+              sendData(DATA[1] - 65);
+            }
+
+            stateMode = 0;
+          }
+          else if (str[4] == '0' && str[5] == '0') { // 0
+            while (stateMode != 4) {
+              sendData(DATA[2] - 65);
+            }
+            stateMode = 0;
+          }
+          else if (str[4] == '1' && str[5] == '0') { // 45
+            while (stateMode != 4) {
+              sendData(DATA[3] - 65);
+            }
+
+          }
+          //Start Send
+        }
+      }
       delay(2000);
       index = 0;
       for (int i = 0; i < 12; i++)
@@ -249,12 +277,22 @@ void createFrame(int changeMode, int angle, int pic)
     setPayload(angle, pic);
     for (int i = 4; i < 9; i++)
     {
-      newFrame[i] = payload[i-4];
+      newFrame[i] = payload[i - 4];
+    }
+  }
+  else if (changeMode == 4)
+  {
+    setPayloadData(angle, pic);
+    for (int i = 4; i < 9; i++)
+    {
+      newFrame[i] = payload[i - 4];
     }
   }
 
   ///change parity bit
   newFrame[9] = createParityBit(EVEN);
+  //  Serial.print("parity: ");
+  //  Serial.println(newFrame[9]);
 
   //return startBit + data + stopBit;
 }
@@ -262,8 +300,8 @@ void createFrame(int changeMode, int angle, int pic)
 void setPayload(int angle, int pic)
 {
   int set[3][2] = {
-    {0, 0},
     {0, 1},
+    {0, 0},
     {1, 0}
   };
   int setPic[7][3] = {
@@ -281,19 +319,170 @@ void setPayload(int angle, int pic)
   payload[3] = setPic[pic][1];
   payload[4] = setPic[pic][2];
 }
+void setPayloadData(int count, int pic) {
+  int set[4] = {1, 1, 1, 0};
+  int setPic[6][4][4] = {
+    {
+      {0, 0, 0, 0},
+      {0, 0, 0, 0},
+      {1, 1, 1, 1},
+      {1, 1, 1, 1},
+    },
+    {
+      {1, 1, 1, 1},
+      {1, 1, 1, 1},
+      {0, 0, 0, 0},
+      {0, 0, 0, 0},
+    },
+    {
+      {0, 0, 1, 1},
+      {0, 0, 1, 1},
+      {0, 0, 1, 1},
+      {0, 0, 1, 1},
+    },
+    {
+      {1, 1, 0, 0},
+      {1, 1, 0, 0},
+      {1, 1, 0, 0},
+      {1, 1, 0, 0},
+    },
+    {
+      {0, 0, 0, 0},
+      {1, 0, 0, 0},
+      {1, 1, 0, 0},
+      {1, 1, 1, 0},
+    },
+    {
+      {0, 1, 1, 1},
+      {0, 0, 1, 1},
+      {0, 0, 0, 1},
+      {0, 0, 0, 0},
+    },
+  };
+  payload[0] = set[count];
+  payload[1] = setPic[pic][count][0];
+  payload[2] = setPic[pic][count][1];
+  payload[3] = setPic[pic][count][2];
+  payload[4] = setPic[pic][count][3];
+}
 void sendPic(int pic1, int pic2, int pic3) {
-  Serial.println();
+  //  Serial.println();
   createFrame(SENDPIC, 0, pic1);
   sendFrame(newFrame);
-  Serial.println();
+  //  Serial.println();
   delay(1000);
   createFrame(2, 1, pic2);
   sendFrame(newFrame);
-  Serial.println();
+  //  Serial.println();
   delay(1000);
   createFrame(2, 2, pic3);
   sendFrame(newFrame);
   delay(1000);
+}
+void sendData(int pic) { //Send Data
+  if ( stateMode == 0 ) {
+    createFrame(SENDDATA, 0, pic);
+    sendFrame(newFrame);
+    stateMode = 1;
+  }
+  else {
+    int tmp = analogRead(A2);
+    //        Serial.println(tmp);
+
+    if (tmp - prev > r_slope && check == false) {
+      MAX = 0;
+      check = true;
+    }
+    if (tmp > MAX) {
+      MAX = tmp;
+    }
+    if (MAX - tmp > r_slope) {
+      if (check == true) {
+        if (micros() - t >= 3550) {
+          reset_millis();
+          t = micros() - 200;
+          if (count >= 5) {
+            str[index++] = '1';
+            str[index++] = '1';
+          }
+          else if (count >= 4) {
+            str[index++] = '1';
+            str[index++] = '0';
+          }
+          else if (count >= 3) {
+            str[index++] = '0';
+            str[index++] = '1';
+          }
+          else if (count >= 1) {
+            str[index++] = '0';
+            str[index++] = '0';
+          }
+
+          count = 0;
+          state++;
+          //          Serial.print("state : ");
+          //          Serial.println(state);
+        }
+        count++;
+        //        Serial.println(count);
+
+      }
+      check = false;
+      if (micros() - t >= 3550 && state == 6) {
+        if (count >= 5) {
+          str[index++] = '1';
+          str[index++] = '1';
+        }
+        else if (count >= 4) {
+          str[index++] = '1';
+          str[index++] = '0';
+        }
+        else if (count >= 3) {
+          str[index++] = '0';
+          str[index++] = '1';
+        }
+        else if (count >= 1) {
+          str[index++] = '0';
+          str[index++] = '0';
+        }
+        state = 7;
+      }
+      if (state == 7) {
+        //      react1();
+        //      long value = strtol(str, NULL, 2);
+        //        for (int i = 0; i < 12; i++)
+        //          Serial.print(str[i]);
+        //        Serial.println();
+        //    Serial.print((char)value)
+        delay(2000);
+        if (str[1] == '1' && str[2] == '1' && str[3] == '1' && stateMode == 1) {
+          createFrame(SENDDATA, 1, pic);
+          sendFrame(newFrame);
+          //delay(1000);
+          stateMode = 2;
+        }
+        else if (str[1] == '1' && str[2] == '1' && str[3] == '1' && stateMode == 2) {
+          createFrame(SENDDATA, 2, pic);
+          sendFrame(newFrame);
+          //delay(1000);
+          stateMode = 3;
+        }
+        else if (str[1] == '1' && str[2] == '1' && str[3] == '1' && stateMode == 3) {
+          createFrame(SENDDATA, 3, pic);
+          sendFrame(newFrame);
+          //delay(1000);
+          stateMode = 4;
+        }
+        index = 0;
+        for (int i = 0; i < 12; i++)
+          str[i] = NULL;
+        count = 0;
+        state = 0;
+        t = 0;
+      }
+    }
+  }
+
 }
 void sendFrame(int *frameToSend)
 {
@@ -308,27 +497,27 @@ void sendFrame(int *frameToSend)
     if (copyFrame[i] == 0 && copyFrame[i + 1] == 0)
     {
       temp = 0;
-      Serial.print("00");
+      //      Serial.print("00");
     }
     if (copyFrame[i] == 0 && copyFrame[i + 1] == 1)
     {
       temp = 1;
-      Serial.print("01");
+      //      Serial.print("01");
     }
     if (copyFrame[i] == 1 && copyFrame[i + 1] == 0)
     {
       temp = 2;
-      Serial.print("10");
+      //      Serial.print("10");
     }
     if (copyFrame[i] == 1 && copyFrame[i + 1] == 1)
     {
       temp = 3;
-      Serial.print("11");
+      //      Serial.print("11");
     }
     sendFSK(temp);
     //Serial.print(temp);
   }
-//  Serial.println();
+  //  Serial.println();
 }
 
 int createParityBit(int parityType)
@@ -337,22 +526,23 @@ int createParityBit(int parityType)
   else return 1;
 }
 
-bool checkParity(int check)
+bool checkParity(int checkp)
 {
   int count = 0;
   int temp;
   int copyFrame[8];
 
   for (int i = 0; i < 8; i++)
+  {
     copyFrame[i] = newFrame[i + 1];
+    //    Serial.print(copyFrame[i]);
+  }
+  //    Serial.println(frame);
+  //  Serial.println();
+  //  Serial.print("temp = ");
 
-  /*Serial.println(copyFrame);
-    Serial.println(frame);
-    Serial.println();
-    Serial.print("temp = ");
-  */
 
-  for (int j = 1; j < 8; j++)
+  for (int j = 0; j < 8; j++)
   {
     temp = int(copyFrame[j]) & 1;
     //Serial.print(temp);
@@ -361,14 +551,14 @@ bool checkParity(int check)
   }
 
   ///check parity
-  if (count % 2 == check) return true;
+  if (count % 2 == checkp) return true;
   else return false;
 }
 
 void sendFSK(int tmp)
 {
   if (tmp == 0) { // for input 00 -> 500 Hz 2cycle/baud
-    //Serial.println("00");
+    //    Serial.println("00");
     for (int i = 0 ; i < 2 ; i++) {
       for (int j = 0 ; j < 4 ; j++) {
         dac.setVoltage(S_DAC[j], false);
@@ -377,7 +567,7 @@ void sendFSK(int tmp)
     }
   }
   else if (tmp == 1) { // for input 01 - 750 Hz 3cycle/baud
-    //Serial.println("01");
+    //    Serial.println("01");
     for (int i = 0 ; i < 3 ; i++) {
       for (int j = 0 ; j < 4 ; j++) {
         dac.setVoltage(S_DAC[j], false);
@@ -386,7 +576,7 @@ void sendFSK(int tmp)
     }
   }
   else if (tmp == 2) { // for input 10 - 1000 Hz 4cycle/baud
-    //Serial.println("10");
+    //    Serial.println("10");
     for (int i = 0 ; i < 4 ; i++) {
       for (int j = 0 ; j < 4 ; j++) {
         dac.setVoltage(S_DAC[j], false);
@@ -395,7 +585,7 @@ void sendFSK(int tmp)
     }
   }
   else if (tmp == 3) { // for input 11 - 1250 Hz 5cycle/baud
-    //Serial.println("11");
+    //    Serial.println("11");
     for (int i = 0 ; i < 5 ; i++) {
       for (int j = 0 ; j < 4 ; j++) {
         dac.setVoltage(S_DAC[j], false);
@@ -404,12 +594,90 @@ void sendFSK(int tmp)
     }
   }
   in >>= 2;
-  //Serial.println("----------------------");
+  //  Serial.println("----------------------");
   dac.setVoltage(2047, false); // for don't send
 }
 
 
+void receive() {
+  int tmp = analogRead(A2);
+  //        Serial.println(tmp);
 
+  if (tmp - prev > r_slope && check == false) {
+    MAX = 0;
+    check = true;
+  }
+  if (tmp > MAX) {
+    MAX = tmp;
+  }
+  if (MAX - tmp > r_slope) {
+    if (check == true) {
+      if (micros() - t >= 3550) {
+        reset_millis();
+        t = micros() - 200;
+        if (count >= 5) {
+          str[index++] = '1';
+          str[index++] = '1';
+        }
+        else if (count >= 4) {
+          str[index++] = '1';
+          str[index++] = '0';
+        }
+        else if (count >= 3) {
+          str[index++] = '0';
+          str[index++] = '1';
+        }
+        else if (count >= 1) {
+          str[index++] = '0';
+          str[index++] = '0';
+        }
+
+        count = 0;
+        state++;
+        //        Serial.print("state : ");
+        //        Serial.println(state);
+      }
+      count++;
+      //      Serial.println(count);
+
+    }
+    check = false;
+    if (micros() - t >= 3550 && state == 6) {
+      if (count >= 5) {
+        str[index++] = '1';
+        str[index++] = '1';
+      }
+      else if (count >= 4) {
+        str[index++] = '1';
+        str[index++] = '0';
+      }
+      else if (count >= 3) {
+        str[index++] = '0';
+        str[index++] = '1';
+      }
+      else if (count >= 1) {
+        str[index++] = '0';
+        str[index++] = '0';
+      }
+      state = 7;
+    }
+    if (state == 7) {
+      //      react1();
+      //      long value = strtol(str, NULL, 2);
+      //      for (int i = 0; i < 12; i++)
+      //        Serial.print(str[i]);
+      //      Serial.println();
+      //    Serial.print((char)value)
+      delay(2000);
+      index = 0;
+      for (int i = 0; i < 12; i++)
+        str[i] = NULL;
+      count = 0;
+      state = 0;
+      t = 0;
+    }
+  }
+}
 
 
 
@@ -420,17 +688,17 @@ void Pause() {
 }
 
 void goMID() {
-  upper.write(up);
-  under.write(83);
+  upper.write(78);
+  under.write(85);
 }
 void goLEFT() {
-  upper.write(up);
+  upper.write(78);
   under.write(134);
 }
 
 void goRIGHT() {
-  upper.write(up);
-  under.write(41);
+  upper.write(78);
+  under.write(46);
 }
 
 void react1() {
@@ -443,8 +711,6 @@ void react1() {
   goLEFT();
   delay(200);
   goMID();
-  delay(200);
-  goLEFT();
   delay(200);
 }
 
@@ -461,84 +727,115 @@ void react2() {
   delay(200);
 }
 
-void PC1_first_Order() {
+
+void PC1_first_Order() { // MODE == 0
   Serial.print('R');
-  if (Serial.available() > 0) {
-    python = Serial.read();
+  while (MODE == 0) {
+    if (Serial.available() > 0) {
+      python = Serial.read();
+    }
     if (python == 'm') {
       goMID();
       first_count += 1;
+      python = ' ';
     }
     else if (python == 'l') {
       goLEFT();
       first_count += 1;
+      python = ' ';
     }
     else if (python == 'r') {
       goRIGHT();
       first_count += 1;
+      python = ' ';
     }
-
-  }
-  if (first_count == 3) {
-    MODE = 1;
+    if (first_count == 3) {
+      MODE = 1;
+    }
   }
 }
 
-void PC2_taken_img() {
-  //  Serial.print('n');
-  if (Serial.available() > 0) {
-    python = Serial.read();
+void PC2_taken_img() { // MODE == 1
+  while (MODE == 1) {
+    if (Serial.available() > 0) {
+      python = Serial.read();
+    }
     if (python == '4') {
-      //      react1();
+      //      delay(100);
+      Serial.print('n'); // <---------- send to python ' NEXT STEP'
       MODE = 2;
-      Serial.print('n');
     }
+  }
+  for(int i=0;i<4;i++){
+    DATA[i] = 0;
   }
 }
 
+void python_send_img_to_arduino() {   ///  MODE == 2
+  while (MODE == 2) {
 
-void python_send_all_img() {
-
-  if ( Serial.available() > 0) {
-    python = Serial.read();
-    if (python == 's' and c_data_got == 0) {
-      //      react1();
-      //      react2();
-      //      goMID();
-      Serial.print('g'); // <---- ready for receive data
-      //      goRIGHT();
-      c_data_got = 1;
-    }
-    else if (python != 's' and c_data_got == 1) { // DATA 1
-      //      react1();
-      //      react2();
-      DATA[0] = python;
-      Serial.print('g'); // <---- got data , send ack back
-      c_data_got = 2;
-    }
-    else if (python != 's' and c_data_got == 2) { // DATA 2
-      //      react2();
-      //      react1();
-      DATA[1] = python;
-      Serial.print('g'); // <---- got data , send ack back
-      c_data_got = 3;
-
-    }
-    else if (python != 's' and c_data_got == 3) { // DATA 2
-      //      react2();
-      //      react1();
-      DATA[2] = python;
-      Serial.print('g'); // <---- got data , send ack back
-      c_data_got = 4;
-    }
-    else if (python != 's' and c_data_got == 4) {
-      Serial.print('g');
-      MODE = 3;
-      for (int i = 0; i < 3; i++) {
-        Serial.print(DATA[i]);
+    if (Serial.available() > 0) {
+      python = Serial.read();
+      
+      if(python == 's'){   // Start sending image
+        Serial.print('g');
+        react1();
+        Serial.flush();
       }
-      delay(1000);
-      Serial.print('g');
+
+      if(python != 's' and c_data == 0 and python != 'g'){  // DATA 1
+        DATA[0] = python;
+        Serial.print('g');
+        react2();
+        Serial.flush();
+        c_data = 1;
+      }
+      else if(python != 's' and c_data == 1 and python != 'g'){  // DATA 2
+        DATA[1] = python;
+        Serial.print('g');
+        react2();
+        Serial.flush();
+        c_data = 2;
+      }
+      else if(python != 's' and c_data == 2 and python != 'g'){  // DATA 3
+        DATA[2] = python;
+        Serial.print('g');
+        react2();
+        Serial.flush();
+        c_data = 3;
+      }
+      else if(python != 's' and c_data == 3 and python != 'g'){  // DATA 4
+        DATA[3] = python;
+        Serial.print('g');
+        react2();
+        Serial.flush();
+        c_data = 4;
+      } 
+
+
     }
+    if (c_data == 4){
+      MODE = 3;
+    }
+
+
   }
 }
+
+void check_data_from_python() {   // MODE = 3
+//  while (MODE == 3) {
+//    if (Serial.available() > 0) {
+//      python = Serial.read();
+//      if (python == 'a') {
+//        delay(100);
+//        Serial.print('n');
+//      }
+//    }
+//    MODE = 4;
+//  }
+
+}
+
+
+
+

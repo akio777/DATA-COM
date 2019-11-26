@@ -1,0 +1,245 @@
+#include <Servo.h>
+Servo upper,under; //ประกาศตัวแปรแทน Servo กำหนดข
+//left
+//mid 81 83
+//right 82 42
+int up = 74,down = 83;
+char python;
+int first_count = 0;
+int MODE = 0;
+int DATA[3] = {0,0,0};
+int c_data = 0;
+int data_req = 0;
+
+void setup()
+{
+  Serial.begin(115200);
+  under.attach(8);// กำหนดขา 9 ควบคุม Servo
+  upper.attach(9);
+  upper.write(up);
+  under.write(down);
+  Serial.flush();
+//  Serial.print('R');
+}
+
+void loop(){
+  delay(1000);
+  Serial.flush();
+
+  PC1_first_Order();
+  PC2_taken_img();
+  python_send_img_to_arduino();
+
+  
+//  if(MODE == 0){
+//    PC1_first_Order();
+//  }
+//  else if(MODE == 1){
+//    PC2_taken_img();
+//  }
+//  else if(MODE == 2){
+//    python_send_all_img();
+//  }
+//  else if(MODE == 3){
+//    wait_PC1();   // <-------------------------------  pc1 what u want (l m r)
+//  }
+//  else if(MODE == 4){
+//    wait_python_take_image();
+//  }else if(MODE == 5){
+//    Pause();
+//  }
+}
+
+
+void Pause(){
+  while(1){
+    
+  }
+}
+
+void goMID(){
+  upper.write(78);
+  under.write(85);
+}
+void goLEFT(){
+  upper.write(78);
+  under.write(134);
+}
+
+void goRIGHT(){
+  upper.write(78);
+  under.write(46);
+}
+
+void react1(){
+      goMID();
+      delay(200);
+      goLEFT();
+      delay(200);
+      goMID();
+      delay(200);
+      goLEFT();
+      delay(200);
+      goMID();
+      delay(200);
+}
+
+void react2(){
+    goRIGHT();
+    delay(200);
+    goMID();
+    delay(200);
+    goRIGHT();
+    delay(200);
+    goMID();
+    delay(200);
+    goRIGHT();
+    delay(200);
+}
+
+
+void PC1_first_Order(){ // MODE == 0
+  for(int i=0;i<3;i++){
+    DATA[i] = 0;
+  }
+  Serial.print('R');
+  while(MODE==0){
+    if(Serial.available() > 0){
+      python = Serial.read();
+    }
+    if(python == 'm'){
+      goMID();
+      first_count += 1;
+      python = ' ';
+    }
+    else if(python == 'l'){
+      goLEFT();
+      first_count += 1;
+      python = ' ';
+    }
+    else if(python == 'r'){
+      goRIGHT();
+      first_count += 1;
+      python = ' ';
+    }
+    if(first_count == 3){
+      MODE = 1;
+    } 
+  }
+}
+
+void PC2_taken_img(){ // MODE == 1
+  while(MODE==1){
+    if(Serial.available() > 0){
+      python = Serial.read();
+    }
+    if(python == '4'){
+//      delay(100);
+      Serial.print('n'); // <---------- send to python ' NEXT STEP' 
+      MODE = 2;
+    }
+  }
+}
+
+void python_send_img_to_arduino(){    ///  MODE == 2
+  while(MODE==2){
+    if(Serial.available() > 0){
+      python = Serial.read();
+
+      if(python == 's'){
+        Serial.print('g');
+      }
+      else if(python != 's' and c_data == 0){
+        DATA[0] = python;
+        delay(10);
+        Serial.print('g');
+        c_data = 1;
+      }
+      else if(c_data == 1){
+        Serial.print(DATA[0]);
+      }
+
+
+      
+    }
+  }
+}
+
+void checkingDATA(){  // -- > MODE = 3
+  Serial.flush();
+  delay(100);
+  while(MODE==3){
+    if(Serial.available() > 0){
+      python = Serial.read();
+    }
+    if(python == 'c'){
+      react1();
+      delay(100);
+      Serial.print('g');
+      MODE = 4;
+    }
+    
+  }
+
+  
+  
+  
+}
+
+
+// ------------------------------------------------------------------------------------------- //
+
+//void wait_PC1(){    //  MODE == 3
+////   if(Serial.available() > 0){
+////      in = Serial.read();
+//      if(in == 'm'){
+//        goMID();
+//        MODE = 4;
+//        Serial.print('g');
+//        delay(1000);
+//        MODE = 4;
+//      }
+//      else if(in == 'l'){
+//        goLEFT();
+//        MODE = 4;
+//        Serial.print('g');
+//        delay(1000);
+//        MODE = 4;
+//      }
+//      else if(in == 'r'){
+//        goRIGHT();
+//        MODE = 4;
+//        Serial.print('g');
+//        delay(1000);
+//        MODE = 4;
+//      }
+//      else if(in == 'X'){ // DATA lost , send nack   NINE NINE NINE NINE NINE NINE
+//        /////
+//      }
+////   }
+//}
+
+//void wait_python_take_image(){  // MODE == 4
+//  if(Serial.available() > 0){
+//    python = Serial.read();
+//    if(python == 's' and c_data_got == 4){
+//      c_data_got = 5;
+//      Serial.print('g');
+//    }
+//    else if(python != 's' and c_data_got ==5){
+//      data_req = python;
+//      Serial.print('g');
+//      c_data_got == 6;
+//    }
+//    else if(python != 's' and c_data_got == 6){  // SEND DATA to python for check
+//      Serial.print(data_req);
+//      delay(100);
+//      Serial.print('g');
+//    }
+//  }
+//}
+//
+//
+//void send_image_back_to_PC1(){
+//
+//}
